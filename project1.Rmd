@@ -1,0 +1,196 @@
+---
+title: "Project 1"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+
+
+## R Markdown
+
+#### Luciana Ardaya FLA274
+
+**Introduction**
+Three different datasets were obtained: 
+1. Substances risk factor vs direct death by country
+2. Number with depression by country
+3. Continents by country
+
+The “Substances risk factor vs direct death by country” and “Number with depression by country” datasets were obtained from the *Global Burden of Disease* study found in the website, “Our World Data”. The “Substances risk factor vs direct death by country” dataset contained the code, and number of deaths by alcohol use disorders, drug use disorders, alcohol use, drug use, and tobacco use (separately) for each country (entity) by year from 1990-2017. Direct deaths from substance use disorders are deaths which result from alcohol or illicit drug use overdoses, while indirect deaths result from substance use acting as a risk factor for the development of various diseases and injury. The “Number with depression by country” dataset  contained the code and number of people suffering from depression for each country (entity) by year from 1990-2017. Both of these datasets acquired data from both sexes and all ages. The  “Continents by country” dataset contains the continent name, continent code, country name and country code for all of the countries in the world. 
+I chose these datasets based on my interest in public health. I would mainly like to test the relationship between the number of people suffering from depression and the number of *direct* deaths from substance use disorders in each country.
+
+**Part 1:**
+```{R}
+library(tidyverse)
+library(cluster)
+library(ggplot2)
+library(dplyr)
+dbsa <- read.csv("substances-risk-factor-vs-direct-deaths.csv") #Deaths by Substance Abuse dataset 
+dbc <- read.csv("number-with-depression-by-country.csv") #Depression by Country dataset 
+cbc <- read.csv("countrydata.csv") #Countries by Continent dataset
+```
+
+**Part 2: Joining the datasets**
+```{R}
+dim(dbc)
+dim(dbsa)
+dim(cbc)
+
+anti_join(dbsa,dbc, by="Code")
+anti_join(dbc,dbsa, by="Code")
+#first join
+inner_join(dbsa,dbc) -> myhalfdata 
+
+anti_join(myhalfdata, cbc, by=c("Code"="Three_Letter_Country_Code"))
+anti_join(cbc, myhalfdata, by=c("Three_Letter_Country_Code"="Code"))
+#second join
+inner_join(myhalfdata, cbc, by=c("Code"="Three_Letter_Country_Code")) -> myfulldata 
+```
+(Belongs to code above) There were a total of 262 observations in the "Countries by Continent" dataset (dbc), 6,468 observations for the "Deaths by Substance Abuse" dataset (dbsa), and 5,460 observations for "Depression by Country" dataset (dbc). 
+
+Two separate joins were performed in order to obtain the full desired dataset. Before each join, 
+I checked to see which observations the datasets had in common. The "dbsa" and "dbc" datasets had all but 1008 observations in common. I joined the two datasets by 'Entity', 'Code', and 'Year' using 'inner_join()', and named the data 'myhalfdata'. For the second join, I used 'anti_join' to see that the "myhalfdata" dataset is missing 60 observations found in both the "cbc" dataset. Then I used 'inner_join()' to join "myhalfdata" to the "cbc" dataset in order to drop any rows that are not shared. The final dataset, "myfulldata", consists of 5,656 observations and 12 variables. Any variables that did not have a match in each data set were dropped (the 1008 missing "world" observations from dbsa dataset and the 60 countries from the cbc dataset). 
+
+Potential problems when working with this data set is that some countries, although few, have been left out. This may (slightly) impact the outcomes I get when running thr statistics.
+
+
+**Part 3: Summary statistics**
+
+**Summary statistics for 6 numerical variables**
+```{R}
+myfulldata %>% summarize(n_distinct(Entity)) #There are 195 distinct countries represented in the dataset 
+myfulldata %>% summarize(n_distinct(Continent_Name)) #There are 7 distinct continents represented in the dataset 
+
+#Summary statistics for 6 numerical variables
+myfulldata %>% select(-Year) %>% summarize_if(is.numeric, mean, na.rm=T) %>% tibble 
+myfulldata %>% select(-Year) %>% summarize_if(is.numeric, median, na.rm=T) %>% tibble
+myfulldata %>% select(-Year) %>% summarize_if(is.numeric, sd, na.rm=T) %>% tibble
+myfulldata%>%select(-Year)%>% summarize_if(is.numeric, list(min=min,max=max), na.rm=T) %>% tibble 
+myfulldata %>% select(-Year) %>% summarize_if(is.numeric, n_distinct, na.rm=T) %>% tibble
+myfulldata %>% select(-Year) %>% summarize_if(is.numeric, quantile, na.rm=T) %>% tibble
+myfulldata %>% select(-Year) %>% summarize_if(is.numeric, var, na.rm=T) %>% tibble
+myfulldata %>% select(-Year) %>% summarize_if(is.numeric, IQR, na.rm=T) %>% tibble
+```
+(Belongs to code above) The mean, median, sd, min, max, quantile, variance, IQR, and n_distinct were taken for 'Deaths by alcohol use disorders','Deaths by drug use disorders', 'Deaths by alcohol use', 'Deaths by drug use', 'Deaths by tobacco use', and 'Prevalence of depressive disorders'. Each value describes data from 195 distinct countries in 7 distinct continents (the "world") from the years 1990-2017. The almost all cases, the statistical value for number of depressive disorders in the world is higher than the statistics for number of deaths by some sort of substance abuse (alcohol, drugs, tobacco). The highest mean deaths from substance abuse occur in the following order (from highest to lowest): Tobacco use, alcohol use, drug use, alcohol use disorders, and finally, drug use disorders.
+
+**Summary statistics by group**
+```{R}
+#'Deaths.Alcohol.use.disorders' 
+myfulldata %>%group_by(Continent_Name, Entity) %>% summarize(mean_alcdx=mean(Deaths.Alcohol.use.disorders,na.rm=T), sd_alcdx=sd(Deaths.Alcohol.use.disorders, na.rm=T), max_alcdx=max(Deaths.Alcohol.use.disorders, na.rm=T), min_alcdx=min(Deaths.Alcohol.use.disorders, na.rm=T), median_alcdx=median(Deaths.Alcohol.use.disorders, na.rm=T), n())%>% glimpse
+
+#'Deaths.Drug.use.disorders' 
+myfulldata %>% group_by(Continent_Name, Entity) %>%  summarize(mean_drgdx=mean(Deaths.Drug.use.disorders,na.rm=T), max_drgdx=max(Deaths.Drug.use.disorders, na.rm=T), min_drgdx=min(Deaths.Drug.use.disorders, na.rm=T), n()) %>% glimpse
+
+#'Prevalence.Depressivedisorders' 
+myfulldata %>% group_by(Continent_Name, Entity) %>% summarize(mean_depdx=mean(Prevalence.Depressivedisorders,na.rm=T), max_depdx=max(Prevalence.Depressivedisorders, na.rm=T), min_depdx=min(Prevalence.Depressivedisorders, na.rm=T), n()) %>% glimpse
+```
+(Belongs to code above) The mean, sd, max, min, median, and n() for 'Deaths.Alcohol.use.disorders' grouped by continent and entity throughout the years of 1990-2017. As well as the mean, max, min and n() for 'Deaths.Drug.use.disorders'and 'Prevalence.Depressivedisorders'grouped by continent and entity throughout the years of 1990-2017.
+
+```{R}
+#(to satisfy group_by() and pivot() requirements)
+myfulldata %>% mutate(Continent=Continent_Name) %>%  group_by(Continent)%>%summarize(mean_alcdx=mean(Deaths.Alcohol.use.disorders,na.rm=T),mean_drgdx=mean(Deaths.Drug.use.disorders,na.rm=T), mean_depdx=mean(Prevalence.Depressivedisorders,na.rm=T))%>%pivot_wider(names_from="Continent", values_from=contains("_"))%>%pivot_longer(contains("_")) %>% tibble
+```
+(Belongs to code above) Mean 'Deaths.Alcohol.use.disorders','Deaths.Drug.use.disorders', and 'Prevalence.Depressivedisorders' grouped by continent throughout the years of 1990-2017. Pivot_wider() and pivot_longer() were used to condense the dataset into two variables.
+Asia appears to have the highest average number of deaths by alcohol and drug use disorders, and highest average number of people with depression, as expected. 
+
+```{R}
+#(to satisfy using mutate as function of another variable) 
+myfulldata %>%
+  filter(Entity=="United States") %>% arrange(Year) %>%  mutate(Deaths.Substance.use.disorders=Deaths.Alcohol.use.disorders+Deaths.Drug.use.disorders) %>% 
+  mutate(pct_changesubdx = (Deaths.Substance.use.disorders-lag(Deaths.Substance.use.disorders)) /lag(Deaths.Substance.use.disorders)) %>% mutate(pct_changedepdx = (Prevalence.Depressivedisorders-lag(Prevalence.Depressivedisorders)) /lag(Prevalence.Depressivedisorders)) %>% glimpse
+```
+(Belongs to code above) Created a column representing percent increase in 'Deaths.Substance.use.disorders' and 'Prevalence.Depressivedisorders' from previous year in the United States from 1990-2017.
+
+**Part 4: Visualizing**
+
+**Heat-map**
+```{R}
+#heat map - 195 distinct countries in 7 distinct continents (the "world") from the years 1990-2017.
+myfulldata %>% select(-Year)%>%select_if(is.numeric)%>%cor%>%as.data.frame%>% rownames_to_column%>%pivot_longer(-1)%>%
+  ggplot(aes(rowname,name,fill=value))+geom_tile()+
+  geom_text(aes(label=round(value,2)))+
+  xlab("")+ylab("")+coord_fixed()
+```
+The strongest correlations exist between number of cases of depression and number of deaths from alcohol use, deaths from tobacco use, as well as between number of deaths from alcohol use and number of deaths from drug use.
+
+**Plot 1:** Deaths by Substance Abuse vs Prevalence of Depression (in the World from 1990-2017)
+```{R}
+#used 'mutate()' to add up deaths by alcohol use and deaths by alcohol use disorders into a single variable of interest (deaths by substance abuse disorders) 
+myfulldata1 <-myfulldata %>% mutate(Deaths.Substance.use.disorders=Deaths.Alcohol.use.disorders+Deaths.Drug.use.disorders) %>% mutate(Continent=Continent_Name)
+
+myfulldata1 %>% ggplot(aes(Prevalence.Depressivedisorders, Deaths.Substance.use.disorders, color=Continent)) +geom_point(size=0.5) + ggtitle("Deaths by Substance Use Disorders vs Prevalence of Depression") + xlab("Prevalence of Depressive Disorders") + ylab("Number of Deaths by Substance Use Disorders") + theme_minimal() + scale_colour_hue(h = c(0, 270)) + scale_y_continuous(breaks=seq(0,100000,10000))
+```
+Plot 1 serves to illustrate the positive relationship between the number of people suffering from depression for each country and number of *direct* deaths by substance* use disorders in the World from 1990-2017. That is, as the number of people with depression rises, the number of people who die from drug or alcohol overdoses also rises.
+
+*Deaths by substance use is simply a combination of deaths by alcohol and drug use disorders.
+
+
+**Plot 2:** Deaths by Substance Use Disorders from 1990-2017 in 7 Continents (the world).
+```{R}
+#'Deaths.Substance.use.disorders' per year faceted by continent 
+myfulldata1%>% ggplot(aes(Year,Deaths.Substance.use.disorders, color=Continent))+geom_bar(stat="summary")+
+  geom_errorbar(stat="summary")+
+  facet_wrap(~Continent)+scale_x_continuous(breaks=seq(1,12,2)) + ylab("Number of Deaths by Substance Use Disorders") + ggtitle("Deaths by Substance Use Disorders from 1990-2017") + scale_colour_hue(h = c(180, 360)) + theme_bw()
+```
+Plot 2 illustrates the number of deaths by substance use disorders from 1990-2017 in 7 Continents. The number of deaths seems to have generally increased throughout the 27 years. Some continents, like North America, South America, and Africa, display a steadier increase over the years than other countries, like Asia, Europe, and Oceania.
+
+
+**Plot 3:** Prevalence of Depressive Disorders from 1990-2017 in 7 Continents (the world).
+```{R}
+#'Prevalence.Depressivedisorders' per year faceted by continent 
+myfulldata1%>% ggplot(aes(Year,Prevalence.Depressivedisorders, color=Continent))+geom_bar(stat="summary")+
+  geom_errorbar(stat="summary")+
+  facet_wrap(~Continent)+scale_x_continuous(breaks=seq(1,12,2)) + ylab("Prevalence of Depressive Disorders") + ggtitle("Prevalence of Depressive Disorders from 1990-2017") + scale_colour_hue(h = c(180, 360)) + theme_bw()
+```
+Plot 3 illustrates the number of people suffering from depression from 1990-2017 in 7 Continents. The number of cases of depression seems to have generally increased throughout the 27 years.
+
+
+**Part 5. Dimensionality Reduction**
+
+First, the data was processed and reduced down to the main variables of interest, ‘Prevalence.Depressivedisorders’, ‘Deaths.Alcohol.use.disorders’, ‘Deaths.Drug.use.disorders’, since the goal is to test the relationship between the number of people suffering from depression and the number of *direct* deaths from alcohol and drug use disorders. Next, the best number of clusters was found to be k=2 using silhouette widths. PAM  was then used to run a cluster analysis on the data. 
+```{R}
+library(cluster) #load the cluster package
+
+#Step 1: Process data
+myclust_dat<-myfulldata1%>%dplyr::select(Prevalence.Depressivedisorders, Deaths.Alcohol.use.disorders, Deaths.Drug.use.disorders) 
+
+#Step 2: Picking number of clusters with silhouette width
+mypam_dat<-myfulldata1%>%select(Prevalence.Depressivedisorders, Deaths.Alcohol.use.disorders, Deaths.Drug.use.disorders)
+mysil_width<-vector()
+for(i in 2:10){
+  mypam_fit <- pam(mypam_dat, k = i)
+  mysil_width[i] <- mypam_fit$silinfo$avg.width
+}
+ggplot()+geom_line(aes(x=1:10,y=mysil_width))+scale_x_continuous(name="k",breaks=1:10) #best cluster number seems to be 2
+
+#Step 3: Run cluster analysis 
+mypam1 <- myclust_dat %>% scale %>% pam(k=2) 
+mypamclust<-myclust_dat %>% mutate(cluster=as.factor(mypam1$clustering))%>%mutate(Continent=myfulldata1$Continent)
+```
+
+```{R}
+#Step 4: Visualizing three variables in (2) clusters based on 3 variables
+library(plotly)
+mypamclust%>%plot_ly(x= ~Prevalence.Depressivedisorders,  y = ~Deaths.Alcohol.use.disorders, z = ~Deaths.Drug.use.disorders, color= ~Continent,
+        type = "scatter3d", mode = "markers", symbol = ~cluster, symbols = c('circle','x')) %>%
+  layout(autosize = F, width = 900, height = 400) 
+```
+According to the plot, there seems to be a positive relationship between the number of cases of depression and number of deaths from alcohol use disorders, as well as between the number of cases of depression and number of deaths from drug use disorders. There also seems to be a slightly positive relationship between the number of deaths from alcohol use disorders and the number of deaths from drug use disorders. Additionally, the clusters (2) do not match the continents (7). The data from the 7 continents is spread out between the two clusters.
+
+```{R}
+##Step 4: Visualizing all pairwise combinations of the 4 variables colored by continent
+library(GGally)
+ggpairs(mypamclust,columns=1:3, aes(color=Continent))
+```
+This plot again shows the positive relationship between the number of cases of depression, number of deaths from alcohol use disorders, and number of deaths from drug use disorders. It shows Oceania to have the highest correlation between number of cases of depression and number of deaths from alcohol use disorders, and Asia to have the lowest. It shows Oceania to have the highest correlation between the number of cases of depression and the number of deaths from drug use disorders, while Africa had the lowest. It also showed Oceania to have the highest correlation between number of deaths from alcohol use disorders and number of deaths from drug use disorders.
+
+```{R}
+#Step 5: Interpreting Average Silhouette Width/Goodness-of-fit
+mypam1$silinfo$avg.width
+```
+According to the cutoffs, a strong structure has been found in the data.
+
+

@@ -1,0 +1,330 @@
+---
+title: "Project 2"
+output: html_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, fig.align = "center", warning = F, message = F,
+tidy=TRUE, tidy.opts=list(width.cutoff=60), R.options=list(max.print=100))
+```
+#### Luciana Ardaya FLA274
+```{r global_options, include=FALSE}
+#LEAVE THIS CHUNK ALONE!
+library(knitr)
+opts_chunk$set(fig.align="center", fig.height=5, message=FALSE, warning=FALSE, fig.width=8, tidy.opts=list(width.cutoff=60),tidy=TRUE)
+
+#HERE'S THE CLASSIFICAITON DIAGNOSTICS FUNCTION
+class_diag<-function(probs,truth){
+  tab<-table(factor(probs>.5,levels=c("FALSE","TRUE")),truth)
+  acc=sum(diag(tab))/sum(tab)
+  sens=tab[2,2]/colSums(tab)[2]
+  spec=tab[1,1]/colSums(tab)[1]
+  ppv=tab[2,2]/rowSums(tab)[2]
+  f1=2*(sens*ppv)/(sens+ppv)
+
+  if(is.numeric(truth)==FALSE & is.logical(truth)==FALSE){
+    truth<-as.numeric(truth)-1}
+  
+  #CALCULATE EXACT AUC
+  ord<-order(probs, decreasing=TRUE)
+  probs <- probs[ord]; truth <- truth[ord]
+  
+  TPR=cumsum(truth)/max(1,sum(truth)) 
+  FPR=cumsum(!truth)/max(1,sum(!truth))
+  
+  dup<-c(probs[-1]>=probs[-length(probs)], FALSE)
+  TPR<-c(0,TPR[!dup],1); FPR<-c(0,FPR[!dup],1)
+  
+  n <- length(TPR)
+  auc<- sum( ((TPR[-1]+TPR[-n])/2) * (FPR[-1]-FPR[-n]) )
+
+  data.frame(acc,sens,spec,ppv,f1,auc)
+}
+library(tidyverse)
+library(lmtest)
+library(dplyr)
+library(sandwich)
+```
+####0. Introduction
+
+The data set,"Prostate Cancer", consists of 100 observations and 10 variables. Of the ten, nine varibles are numeric and each take on over 10 distinct values. One variable, 'diagnosis_result' is categorical and contains 2 groups, benign and malignant. Eight numeric variables measure the radius, texture, perimeter, area, smoothness, compactness, and symmetry of tumors diagnosed as either benign or malignant for 100 patients identified by ID (numeric variable). The exact units of the numeric variables are unknown. 
+
+```{r}
+pcancer <- read.csv("Prostate_Cancer.csv")
+dim(pcancer)
+pcancer%>%summarise_all(n_distinct)
+```
+
+####1. MANOVA Test
+```{r}
+#(1) MANOVA to test whether 8 numerics differ by diagnosis result
+pcancerman1<- manova(cbind(radius, texture, perimeter, area, smoothness, compactness, symmetry, fractal_dimension)~diagnosis_result, data=pcancer)
+summary(pcancerman1) # With a p-value of 5.513e-10, we can reject the null hypothesis and therefore prove that at least one of the 8 DVs differs by diagnosis result.
+
+#(8) univariate ANOVA tests
+summary.aov(pcancerman1) #out of 8 univariate ANOVA tests, only 5 were significant. Perimeter, area, smoothness, compactness, and symmetry differ by diagnosis. 
+
+#(5) t-tests
+pairwise.t.test(pcancer$perimeter,pcancer$diagnosis_result, p.adj="none")
+pairwise.t.test(pcancer$area,pcancer$diagnosis_result, p.adj="none")
+pairwise.t.test(pcancer$compactness,pcancer$diagnosis_result, p.adj="none")
+
+pairwise.t.test(pcancer$smoothness,pcancer$diagnosis_result, p.adj="none")
+pairwise.t.test(pcancer$symmetry,pcancer$diagnosis_result, p.adj="none")
+
+#type 1 error rate
+# 1 MANOVA, 8 ANOVA, 5 t-tests = 14 tests total
+#P(At least one Type I error) = 1 − P(No Type I errors)
+1-0.95^14
+
+#Bonferroni correction
+0.05/14
+```
+With 1 MANOVA, 8 univariate ANOVAs, and 5 t-tests, 14 tests were performed in total. The overall Type 1 error rate is 0.512. To keep the overall type I error rate at .05, a (boneferroni adjusted) significance level of 0.00357 should be used.  
+
+A one-way MANOVA was conducted to determine the effect of diagnosis result (benign or malignant) on eight DVs (radius, texture, perimeter, area, smoothness, compactness, symmetry, and fractal_dimension).Significant differences were found among the two diagnosis results for at least one of the dependent variables (Pillai trace = 0.470, pseudo F (8, 91) = 10.103, p < 0.0001). 
+
+Univariate ANOVAs for each DV were conducted as follow-up tests to the MANOVA, using the Bonferroni method for controlling Type I error rates for multiple comparisons.The ANOVAs concluded that three (perimeter, area, and compactness) of the eight DVs were significant and at least one diagnosis result differed (F(1, 98) = 57.322, p < .0001, F(1, 98) = 45.347, p =< .0001, and F(1, 98) = 34.86, p =< .0001, respectively). Before the bonferroni adjustment, at least one diagnosis result differed in five (smoothness, symmetry, perimeter, area, and compactness) of the eight DVs.
+
+Post hoc analysis was performed conducting pairwise comparisons to determine which diagnosis result differed in tumor perimeter, area, and compactness. Both diagnosis results were found to differ significantly from each other in terms of tumor perimeter, area, and compactness after adjusting for multiple comparisons (bonferroni α = .05/14 = .00357).
+
+**MANOVA Assumptions**
+```{r}
+library(rstatix)
+group <- pcancer$diagnosis_result 
+DVs <- pcancer %>% select(radius, texture, perimeter, area, smoothness, compactness, symmetry, fractal_dimension)
+
+#Test multivariate normality for each group (null:assumption met) - violated
+sapply(split(DVs,group), mshapiro_test)
+```
+The p-values of each group were p<.05, therefore, the assumption of multivariate normality for each was violated. Further tests of homogeneity of covariance matrices would have been violated as well.
+
+####2. Mean-difference Randomization Test
+
+**H0:** Mean tumor perimeter is the same for malignant vs. benign diagnostic results.
+**Ha:** Mean tumor perimeter is different for malignant vs. benign diagnostic results.
+```{r}
+#TEST STATISTIC: observed difference in means
+pcancer%>%group_by(diagnosis_result)%>%summarize(means=mean(perimeter))%>%summarize(`mean_diff`=diff(means)) 
+
+#Permutation test
+rand_dist<-vector() #create vector to hold diffs under null hypothesis
+for(i in 1:5000){
+new<-data.frame(perimeter=sample(pcancer$perimeter),diagnosis_result=pcancer$diagnosis_result) #scramble columns
+rand_dist[i]<-mean(new[new$diagnosis_result=="M",]$perimeter)-   
+              mean(new[new$diagnosis_result=="B",]$perimeter)} #compute mean difference (base R)
+
+#what proportion of this ditribution lies out side the cutoff?
+mean(rand_dist>29.48 | rand_dist< -29.48) #two-tailed p value; under 0.05 so we reject the null hypothesis
+```
+**Interpretation:** A mean-difference randomization test was performed between tumor perimeter and the two different diagnosis results, benign and malignant. The test statistic is 29.48, meaning that tumors diagnosed as malignant are 29.48 units bigger in perimeter than benign tumors, on average. With a p-value of 0, I can reject the null hypothesis and conclude that mean tumor perimeter is different for alignant vs. benign diagnostic results.
+
+**Plot visualizing the null distribution and test statistic**
+```{r}
+{hist(rand_dist,main="",ylab="", xlim=c(-30,30)); abline(v = c(-29.48, 29.48),col="red")}
+```
+
+####3. Linear Regression
+
+**Linear regression model predicting tumor perimeter from at diagnosis result and tumor compactness:**
+```{r}
+pcancer$compactness_c <- pcancer$compactness - mean(pcancer$compactness,na.rm=T) #mean-center numeric variable in interaction
+
+fit_pcancer<-lm(perimeter~diagnosis_result*compactness_c, data=pcancer)
+summary(fit_pcancer)
+```
+Coefficient estimate interpretations:
+The intercept of 84.573 is the predicted tumor perimeter for a benign tumor whose compactness is average.
+For those with average tumor compactness, malignant tumors have a predicted perimeter thats is 20.947 greater than benign tumors.
+For every 1-unit increase in tumor compactness, predicted perimeter goes up 152.579 units for benign tumors.
+The slope of tumor compactness on perimeter for malignant tumors is 51.599 lower than for benign tumors.
+
+**Regression plot with an interaction:**
+```{r}
+pcancer%>% ggplot(aes(compactness_c,perimeter,color=diagnosis_result))+geom_smooth(method="lm")+geom_vline(xintercept=0, lty=2)
+pcancer %>% ggplot(aes(compactness_c,perimeter,color=diagnosis_result))+geom_point()+geom_smooth(method="lm", se=F)
+```
+**Checking assumptions:**
+```{r}
+#test linearity
+resids<-fit_pcancer$residuals
+fitvals<-fit_pcancer$fitted.values
+ggplot()+geom_point(aes(fitvals,resids))+geom_hline(yintercept=0, color='red')+ggtitle("Residuals vs Fitted plot")
+
+#test normality
+shapiro.test(resids) #Ho: true distribution is normal - met
+
+#test homoskedacity 
+bptest(fit_pcancer) #H0: homoskedastic - violated
+#Normal-theory (uncorrected) SEs
+summary(fit_pcancer)
+#Robust (corrected) SEs
+coeftest(fit_pcancer, vcov = vcovHC(fit_pcancer)) #regression after adjusting standard errors for violation
+```
+The linearity assumption was checked by inspecting the Residuals vs Fitted plot. Normality was checked using the Shapiro-Wilk test and homoskedacity was checked using the BP test. The linearity assumption seems to have been met, along with normality. The homoskedacity assumption was violated.
+
+The corrected standard errors were larger than the normal-theory standard errors. Under robust SEs, the model's estimates for intercept and 'diadnosis_resultM' remained significant, while the estimate for 'compactness_c' lost its significance (relative to the original model). 
+
+**R^2:**
+```{r}
+fit_pcancer<-lm(perimeter~diagnosis_result*compactness_c, data=pcancer)
+summary(fit_pcancer)
+```
+According to the model's multiple R-squared value, 43.49% of variability in tumor perimeter is explained by the model. However, according to its adjusted R-squared value, 41.73% of variability in tumor perimeter is explained by the model.
+
+####4. Regression model using bootstrapped SE's:
+```{r}
+#sample rows from dataset with replacement
+boot_dat<- sample_frac(pcancer, replace=T)
+
+# repeat 5000 times
+samp_distn<-replicate(5000, {
+  boot_dat <- sample_frac(pcancer, replace=T) #take bootstrap sample of rows
+  fit <- lm(perimeter~diagnosis_result*compactness_c, data=boot_dat) #fit model on bootstrap sample
+  coef(fit) #save coefs
+})
+## Bootstrapped SEs (resampling rows)
+samp_distn %>% t %>% as.data.frame %>% summarize_all(sd)
+#Normal-theory (uncorrected) SEs
+summary(fit_pcancer)$coef[,1:2]
+#Robust (corrected) SEs
+coeftest(fit_pcancer, vcov = vcovHC(fit_pcancer))[,1:2]
+```
+The bootstrapped SEs were larger than the normal-theory SEs but smaller than the robust SEs, meaning it's p-values followed the same pattern. As previously stated, under robust SEs, the model's estimates for intercept and 'diadnosis_resultM' remained significant, while the estimate for 'compactness_c' lost significance (relative to the original model). 
+
+####5. Logistic Regression predicting diagnosis result from perimeter and area
+**Logistic regression:** 
+```{r}
+pcancerdata <- pcancer %>% mutate(y=ifelse(diagnosis_result=="M",1,0))
+myfit1<-glm(y ~ perimeter+area, data=pcancerdata, family=binomial(link="logit"))
+coeftest(myfit1) #coefficients are on logit scale
+exp(coef(myfit1)) #exponentiate to get odds scale
+```
+Coefficient interpretations:
+Intercept: odds of malignancy for perimeter=0, area=0 is 3.575e-12.
+For every one-unit increase in perimeter, the odds of malignancy are multiplied by 1.609.
+For every one-unit increase in area, the odds of malignancy are multiplied by 9.735e-01.
+
+**Class Diagnostics & Confusion Matrix:** 
+```{r}
+#predicted probabilities
+prob<-predict(myfit1,data="response")
+class_diag(prob, pcancerdata$diagnosis_result)
+#confusion matrix
+pred<-ifelse(prob>.5,1,0)
+table(truth=pcancerdata$diagnosis_result, predict=pred) %>% addmargins
+(31+53)/100 #Accuracy
+53/62 #Sensitivity (TPR)
+31/38 #Specificity (TNR)
+```
+Classification Diagnostics: The accuracy, sensitivity, specificity, and ppv are 0.84, 0.85, 0.82, 0.88, respectively.The AUC is 0.917, which is classified as great. 
+The confusion matrix was also used to calculate the accuracy, sensitivity, and specificity of the model. The claculated values matched those from the 'class_diag' function.
+
+**Density Plot:** 
+```{r}
+#Density Plot
+pcancerdata$logit<-predict(myfit1,type="link") #get predicted logit scores (logodds)
+pcancerdata %>% mutate(diagnosis_result=factor(diagnosis_result,levels=c("M","B"))) %>%ggplot()+geom_density(aes(logit,color=diagnosis_result,fill=diagnosis_result), alpha=.4)+
+  theme(legend.position=c(.85,.85))+geom_vline(xintercept=0)+xlab("predictor (logit)") #plot logit scores for each truth category
+```
+
+**ROC Curve & AUC:** 
+```{r}
+#ROC Curve
+library(plotROC) #install.packages(plotROC)
+#geom_roc needs true outcome (d, should be 0/1) and predicted probability/logit (m, or just  predictor if just one):
+myROCplot1<-ggplot(pcancerdata)+geom_roc(aes(d=y,m=prob), n.cuts=0) 
+myROCplot1
+#compute the AUC
+calc_auc(myROCplot1)
+```
+The AUC for this model can be classified as great, with a value of 0.917. 
+
+####6. Logistic Regression predicting diagnosis result from radius, texture, perimeter, area, smoothness, compactness, symmetry, and fractal_dimension.
+**Logistic Regression: In-sample**
+```{r}
+myfit2<-glm(y~radius+texture+perimeter+area+smoothness+compactness+symmetry+fractal_dimension, data=pcancerdata,family=binomial (link="logit"))
+coeftest(myfit2) #coefficients are on logit scale
+exp(coef(myfit2)) #exponentiate to get odds scale
+
+#predicted probabilities
+prob2<-predict(myfit2,data="response")
+#in-sample classification diagnostics
+class_diag(prob2, pcancerdata$diagnosis_result)
+```
+The accuracy, sensitivity, and specificity are all about 0.87, while the precision is about 0.92.The AUC is 0.929, which is classified as great. 
+
+**10-fold CV**
+```{r}
+set.seed(1234)
+k=10
+
+data <- pcancerdata %>% sample_frac #put rows of dataset in random order
+folds <- ntile(1:nrow(data),n=10) #create fold labels
+
+diags<-NULL
+for(i in 1:k){
+  train <- data[folds!=i,] #create training set (all but fold i)
+  test <- data[folds==i,] #create test set (just fold i)
+  truth <- test$y #save truth labels from fold i
+  
+  fit3 <- glm(y~radius+texture+perimeter+area+smoothness+compactness+symmetry+fractal_dimension,data=train,family="binomial")
+  probs <- predict(fit3, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+
+summarize_all(diags,mean)
+```
+The average accuracy, sensitivity, specificity, and precision were calculated to be about 0.83, 0.87, 0.77, and 0.86, respectively, for the 10-fold CV model. The out-of sample AUC (0.88) showed a decrease from the in-sample AUC (0.929), meaning that the original model shows signs of overfitting. The out-of-sample AUC is considered to be good. 
+
+**LASSO**
+```{r}
+#install.packages("glmnet")
+library(glmnet)
+set.seed(1234)
+
+# your code here
+y<-as.matrix(pcancerdata$diagnosis_result) #grab response
+pcancerdata_preds<-model.matrix(diagnosis_result~radius+texture+perimeter+area+smoothness+compactness+symmetry+fractal_dimension,data=pcancerdata)[,-1] #predictors (drop intercept)
+head(pcancerdata_preds) #predictors in matrix form
+pcancerdata_preds<-scale(pcancerdata_preds) #scale 
+
+#1st step of LASSO (family="binomial" bc logistic regression)
+cv <- cv.glmnet(pcancerdata_preds,y, family="binomial") #picks an optimal value for lambda through 10-fold CV
+
+#make a plot of the coefficients for different values of lambda (line for each predictor variable)
+{plot(cv$glmnet.fit, "lambda", label=TRUE); abline(v = log(cv$lambda.1se)); abline(v = log(cv$lambda.min),lty=2)} #choose the lamdba thats = to the solid line 
+
+cv<-cv.glmnet(pcancerdata_preds,y,family="binomial")
+lasso_fit<-glmnet(pcancerdata_preds,y,family="binomial",lambda=cv$lambda.1se)
+coef(lasso_fit)
+
+#classification diagnostics
+lasso_prob<-predict(lasso_fit, pcancerdata_preds, type="response")
+class_diag(lasso_prob, pcancerdata$diagnosis_result)
+```
+Non-zero coefficient estimates include perimeter and compactness. These varibales are retained. 
+
+**10-fold CV using LASSO-selected variables**
+```{r}
+set.seed(1234)
+k=10
+
+data <- pcancerdata %>% sample_frac #put rows of dataset in random order
+folds <- ntile(1:nrow(data),n=10) #create fold labels
+
+diags<-NULL
+for(i in 1:k){
+  train <- data[folds!=i,] #create training set (all but fold i)
+  test <- data[folds==i,] #create test set (just fold i)
+  truth <- test$y #save truth labels from fold i
+  
+  fit4 <- glm(y~perimeter+compactness,data=train,family="binomial")
+  probs <- predict(fit4, newdata=test, type="response")
+  
+  diags<-rbind(diags,class_diag(probs,truth))
+}
+
+summarize_all(diags,mean)
+```
+The out-of sample AUC (0.88) showed a decrease from the in-sample AUC (0.929), meaning that the orignal model (included all 8 explanatory variables) showed signs of overfitting. The AUC of the model using only LASSO-selected variables, 0.908, shows a much smaller decrease from the original in-sample AUC and is considered great.
