@@ -397,7 +397,7 @@ samp_distn &lt;- replicate(5000, {
 ## Bootstrapped SEs (resampling rows)
 samp_distn %&gt;% t %&gt;% as.data.frame %&gt;% summarize_all(sd)</code></pre>
 <pre><code>##   (Intercept) diagnosis_resultM compactness_c diagnosis_resultM:compactness_c
-## 1    5.145498          5.609774      90.54213                        107.2839</code></pre>
+## 1    5.118939          5.565349      90.86997                        106.4284</code></pre>
 <pre class="r"><code># Normal-theory (uncorrected) SEs
 summary(fit_pcancer)$coef[, 1:2]</code></pre>
 <pre><code>##                                  Estimate Std. Error
