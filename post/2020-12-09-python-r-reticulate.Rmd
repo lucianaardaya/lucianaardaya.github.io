@@ -1,0 +1,24 @@
+---
+title: 'Python, R, & Reticulate '
+author: ''
+date: '2020-12-09'
+slug: python-r-reticulate
+categories: []
+tags: []
+description: ''
+---
+
+```{R}
+
+```
+
+```{python}
+import re
+
+```
+
+```{R}
+```
+
+```{R}
+```

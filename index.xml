@@ -1,12 +1,31 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>Luciana Ardaya</title>
+    <title>My Website: Luciana Ardaya</title>
     <link>/</link>
-    <description>Recent content on Luciana Ardaya</description>
+    <description>Recent content on My Website: Luciana Ardaya</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Tue, 01 Dec 2020 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 09 Dec 2020 00:00:00 +0000</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>My pup Theo &lt;3</title>
+      <link>/post/2020/12/09/my-pup-theo-3/</link>
+      <pubDate>Wed, 09 Dec 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020/12/09/my-pup-theo-3/</guid>
+      <description> Meet my 7 month old Chow Chow, Theo!
+  </description>
+    </item>
+    
+    <item>
+      <title>Python, R, &amp; Reticulate </title>
+      <link>/post/2020/12/09/python-r-reticulate/</link>
+      <pubDate>Wed, 09 Dec 2020 00:00:00 +0000</pubDate>
+      
+      <guid>/post/2020/12/09/python-r-reticulate/</guid>
+      <description> import re </description>
+    </item>
+    
     <item>
       <title>another post</title>
       <link>/post/2020/12/01/another-post/</link>
@@ -26,17 +45,6 @@
     </item>
     
     <item>
-      <title>Hello R Markdown</title>
-      <link>/post/2015/07/23/hello-r-markdown/</link>
-      <pubDate>Thu, 23 Jul 2015 21:13:14 -0500</pubDate>
-      
-      <guid>/post/2015/07/23/hello-r-markdown/</guid>
-      <description>R Markdown This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see http://rmarkdown.rstudio.com.
-You can embed an R code chunk like this:
-summary(cars) ## speed dist ## Min. : 4.0 Min. : 2.00 ## 1st Qu.:12.0 1st Qu.: 26.00 ## Median :15.0 Median : 36.00 ## Mean :15.4 Mean : 42.98 ## 3rd Qu.</description>
-    </item>
-    
-    <item>
       <title>Creating a New Theme</title>
       <link>/post/2014/09/28/creating-a-new-theme/</link>
       <pubDate>Sun, 28 Sep 2014 00:00:00 +0000</pubDate>
@@ -52,7 +60,7 @@ We&amp;rsquo;ll start with creating a new site with a very basic template.</desc
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>/project1/</guid>
-      <description>R Markdown Luciana Ardaya FLA274 Introduction Three different datasets were obtained: 1. Substances risk factor vs direct death by country 2. Number with depression by country 3. Continents by country
+      <description>Luciana Ardaya FLA274 Introduction Three different datasets were obtained: 1. Substances risk factor vs direct death by country 2. Number with depression by country 3. Continents by country
 The “Substances risk factor vs direct death by country” and “Number with depression by country” datasets were obtained from the Global Burden of Disease study found in the website, “Our World Data”. The “Substances risk factor vs direct death by country” dataset contained the code, and number of deaths by alcohol use disorders, drug use disorders, alcohol use, drug use, and tobacco use (separately) for each country (entity) by year from 1990-2017.</description>
     </item>
     

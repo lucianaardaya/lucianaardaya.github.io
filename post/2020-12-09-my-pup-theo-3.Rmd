@@ -1,0 +1,13 @@
+---
+title: My pup Theo <3
+author: ''
+date: '2020-12-09'
+slug: my-pup-theo-3
+categories: []
+tags: []
+description: ''
+---
+Meet my 7 month old Chow Chow, Theo!
+
+<center>
+![](/post/2020-12-09-my-pup-theo-3_files/theo.JPG){width=75%}</center>
