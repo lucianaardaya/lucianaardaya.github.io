@@ -72,7 +72,8 @@
               
 
 
-<p><strong>Lists &amp; Indexing in Python</strong></p>
+<p><strong>Introduction:</strong> Using what we learned throughout this past fall semester in SDS348, here are some cool things you can do using R and Python, individually, as well as together using reticulate!</p>
+<p><strong>Lists &amp; Indexing in Python:</strong></p>
 <pre class="python"><code>list1=[&#39;I&#39;,&#39;love&#39;,&#39;my&#39;, &#39;dog&#39;, &#39;Theo&#39;, &#39;me&#39;, &#39;loves&#39;]
 list1[0:5]</code></pre>
 <pre><code>## [&#39;I&#39;, &#39;love&#39;, &#39;my&#39;, &#39;dog&#39;, &#39;Theo&#39;]</code></pre>
@@ -88,10 +89,12 @@ list1[-1]</code></pre>
 <center>
 <img src="../../../../../post/2020-12-09-python-r-reticulate_files/babyy.png" style="width:25.0%" />
 </center>
-<p><strong>Combining R &amp; Python</strong></p>
+<p><strong>Using Strings in Python and R:</strong></p>
 <pre class="r"><code>#my code in R
+
 string1&lt;-c(&quot;I love my&quot;)</code></pre>
 <pre class="python"><code>#my code in Python
+
 import re 
 string2=&quot;dog Theo&quot;
 string3=&quot;dore&quot;
@@ -99,6 +102,30 @@ print(r.string1, string2)</code></pre>
 <pre><code>## I love my dog Theo</code></pre>
 <pre class="python"><code>print(r.string1, (string2 + string3))</code></pre>
 <pre><code>## I love my dog Theodore</code></pre>
+<pre class="python"><code>myfullsentence=(r.string1, (string2 + string3))
+print(myfullsentence)</code></pre>
+<pre><code>## (&#39;I love my&#39;, &#39;dog Theodore&#39;)</code></pre>
+<p><strong>Regular Expressions in Python and R:</strong></p>
+<pre class="r"><code>#my code in R
+
+string4&lt;-&quot;I love my dog Theo. We go on several walks a day. He loves treats and cuddles.&quot;</code></pre>
+<pre class="python"><code>#my code in Python
+
+re.findall(r&quot;I love .{11}&quot;, r.string4)</code></pre>
+<pre><code>## [&#39;I love my dog Theo&#39;]</code></pre>
+<pre class="python"><code>re.sub(r&quot;treats .+&quot;,&quot;long walks and playing fetch&quot;, r.string4)</code></pre>
+<pre><code>## &#39;I love my dog Theo. We go on several walks a day. He loves long walks and playing fetch&#39;</code></pre>
+<p><strong>Writing Functions in Python:</strong></p>
+<pre class="python"><code>string5=&quot;I LovE My dOg tHeO. He iS a GoOD boY moST OF ThE TIMe! Except for when HE STeaLs My SOCkS.&quot;
+nopun=re.sub(r&quot;\.|—|\,|;&quot;,&quot;&quot;, string5)
+wordlist=re.split(r&quot;\s&quot;,nopun)
+
+hold=[]
+for word in wordlist:
+    temp=word.lower()
+    hold.append(temp)
+print(hold)</code></pre>
+<pre><code>## [&#39;i&#39;, &#39;love&#39;, &#39;my&#39;, &#39;dog&#39;, &#39;theo&#39;, &#39;he&#39;, &#39;is&#39;, &#39;a&#39;, &#39;good&#39;, &#39;boy&#39;, &#39;most&#39;, &#39;of&#39;, &#39;the&#39;, &#39;time!&#39;, &#39;except&#39;, &#39;for&#39;, &#39;when&#39;, &#39;he&#39;, &#39;steals&#39;, &#39;my&#39;, &#39;socks&#39;]</code></pre>
 
               <hr>
               <div class="related-posts">

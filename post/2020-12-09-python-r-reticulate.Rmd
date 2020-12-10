@@ -10,8 +10,9 @@ description: ''
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+**Introduction:** Using what we learned throughout this past fall semester in SDS348, here are some cool things you can do using R and Python, individually, as well as together using reticulate! 
 
-**Lists & Indexing in Python**
+**Lists & Indexing in Python:**
 ```{python}
 list1=['I','love','my', 'dog', 'Theo', 'me', 'loves']
 list1[0:5]
@@ -26,25 +27,50 @@ list1[5]
 ```
 <center>
 ![](/post/2020-12-09-python-r-reticulate_files/babyy.png){width=25%}</center>
-
-**Combining R & Python**
+**Using Strings in Python and R:**
 ```{R}
 #my code in R
+
 string1<-c("I love my")
 ```
 
 ```{python}
 #my code in Python
+
 import re 
 string2="dog Theo"
 string3="dore"
 print(r.string1, string2)
 print(r.string1, (string2 + string3))
+
+myfullsentence=(r.string1, (string2 + string3))
+print(myfullsentence)
 ```
 
+
+**Regular Expressions in Python and R:**
 ```{r}
+#my code in R
 
+string4<-"I love my dog Theo. We go on several walks a day. He loves treats and cuddles."
 ```
 
-```{R}
+```{python}
+#my code in Python
+
+re.findall(r"I love .{11}", r.string4)
+re.sub(r"treats .+","long walks and playing fetch", r.string4)
+```
+
+**Writing Functions in Python:**
+```{python}
+string5="I LovE My dOg tHeO. He iS a GoOD boY moST OF ThE TIMe! Except for when HE STeaLs My SOCkS."
+nopun=re.sub(r"\.|—|\,|;","", string5)
+wordlist=re.split(r"\s",nopun)
+
+hold=[]
+for word in wordlist:
+    temp=word.lower()
+    hold.append(temp)
+print(hold)
 ```

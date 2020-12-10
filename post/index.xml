@@ -23,9 +23,9 @@
       <pubDate>Wed, 09 Dec 2020 00:00:00 +0000</pubDate>
       
       <guid>/post/2020/12/09/python-r-reticulate/</guid>
-      <description> Lists &amp;amp; Indexing in Python
-list1=[&amp;#39;I&amp;#39;,&amp;#39;love&amp;#39;,&amp;#39;my&amp;#39;, &amp;#39;dog&amp;#39;, &amp;#39;Theo&amp;#39;, &amp;#39;me&amp;#39;, &amp;#39;loves&amp;#39;] list1[0:5] ## [&amp;#39;I&amp;#39;, &amp;#39;love&amp;#39;, &amp;#39;my&amp;#39;, &amp;#39;dog&amp;#39;, &amp;#39;Theo&amp;#39;] list1.append(&amp;#39;and&amp;#39;) list1[-1] ## &amp;#39;and&amp;#39; list1[2:5] ## [&amp;#39;my&amp;#39;, &amp;#39;dog&amp;#39;, &amp;#39;Theo&amp;#39;] list1[6] ## &amp;#39;loves&amp;#39; list1[5] ## &amp;#39;me&amp;#39;   Combining R &amp;amp; Python
-#my code in R string1&amp;lt;-c(&amp;quot;I love my&amp;quot;) #my code in Python import re string2=&amp;quot;dog Theo&amp;quot; string3=&amp;quot;dore&amp;quot; print(r.string1, string2) ## I love my dog Theo print(r.string1, (string2 + string3)) ## I love my dog Theodore </description>
+      <description>Introduction: Using what we learned throughout this past fall semester in SDS348, here are some cool things you can do using R and Python, individually, as well as together using reticulate!
+Lists &amp;amp; Indexing in Python:
+list1=[&amp;#39;I&amp;#39;,&amp;#39;love&amp;#39;,&amp;#39;my&amp;#39;, &amp;#39;dog&amp;#39;, &amp;#39;Theo&amp;#39;, &amp;#39;me&amp;#39;, &amp;#39;loves&amp;#39;] list1[0:5] ## [&amp;#39;I&amp;#39;, &amp;#39;love&amp;#39;, &amp;#39;my&amp;#39;, &amp;#39;dog&amp;#39;, &amp;#39;Theo&amp;#39;] list1.append(&amp;#39;and&amp;#39;) list1[-1] ## &amp;#39;and&amp;#39; list1[2:5] ## [&amp;#39;my&amp;#39;, &amp;#39;dog&amp;#39;, &amp;#39;Theo&amp;#39;] list1[6] ## &amp;#39;loves&amp;#39; list1[5] ## &amp;#39;me&amp;#39;   Using Strings in Python and R:</description>
     </item>
     
     <item>
