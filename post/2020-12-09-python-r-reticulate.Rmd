@@ -8,16 +8,39 @@ tags: []
 description: ''
 ---
 
-```{R}
-
+**Lists & Indexing in Python**
+```{python}
+list1=['I','love','my', 'dog', 'Theo', 'me', 'loves']
+list1[0:5]
 ```
 
 ```{python}
-import re
+list1.append('and')
+list1[-1]
+list1[2:5]
+list1[6]
+list1[5]
+```
+<center>
+![](/post/2020-12-09-python-r-reticulate_files/babyy.png){width=25%}</center>
 
+**Combining R & Python**
+```{R}
+#my code in R
+string1<-c("I love my")
 ```
 
-```{R}
+```{python}
+#my code in Python
+import re 
+string2="dog Theo"
+string3="dore"
+print(r.string1, string2)
+print(r.string1, (string2 + string3))
+```
+
+```{r}
+
 ```
 
 ```{R}
