@@ -116,8 +116,8 @@ re.findall(r&quot;I love .{11}&quot;, r.string4)</code></pre>
 <pre class="python"><code>re.sub(r&quot;treats .+&quot;,&quot;long walks and playing fetch&quot;, r.string4)</code></pre>
 <pre><code>## &#39;I love my dog Theo. We go on several walks a day. He loves long walks and playing fetch&#39;</code></pre>
 <p><strong>Writing Functions in Python:</strong></p>
-<pre class="python"><code>string5=&quot;I LovE My dOg tHeO. He iS a GoOD boY moST OF ThE TIMe! Except for when HE STeaLs My SOCkS.&quot;
-nopun=re.sub(r&quot;\.|—|\,|;&quot;,&quot;&quot;, string5)
+<pre class="python"><code>string5=&quot;I LovE My dOg tHeO! He iS a GoOD boY, moST OF ThE TIMe! Except for when HE STeaLs My SOCkS.&quot;
+nopun=re.sub(r&quot;\.|\,|!&quot;,&quot;&quot;, string5)
 wordlist=re.split(r&quot;\s&quot;,nopun)
 
 hold=[]
@@ -125,7 +125,7 @@ for word in wordlist:
     temp=word.lower()
     hold.append(temp)
 print(hold)</code></pre>
-<pre><code>## [&#39;i&#39;, &#39;love&#39;, &#39;my&#39;, &#39;dog&#39;, &#39;theo&#39;, &#39;he&#39;, &#39;is&#39;, &#39;a&#39;, &#39;good&#39;, &#39;boy&#39;, &#39;most&#39;, &#39;of&#39;, &#39;the&#39;, &#39;time!&#39;, &#39;except&#39;, &#39;for&#39;, &#39;when&#39;, &#39;he&#39;, &#39;steals&#39;, &#39;my&#39;, &#39;socks&#39;]</code></pre>
+<pre><code>## [&#39;i&#39;, &#39;love&#39;, &#39;my&#39;, &#39;dog&#39;, &#39;theo&#39;, &#39;he&#39;, &#39;is&#39;, &#39;a&#39;, &#39;good&#39;, &#39;boy&#39;, &#39;most&#39;, &#39;of&#39;, &#39;the&#39;, &#39;time&#39;, &#39;except&#39;, &#39;for&#39;, &#39;when&#39;, &#39;he&#39;, &#39;steals&#39;, &#39;my&#39;, &#39;socks&#39;]</code></pre>
 
               <hr>
               <div class="related-posts">

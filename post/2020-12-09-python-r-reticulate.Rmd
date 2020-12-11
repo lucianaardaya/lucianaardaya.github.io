@@ -64,8 +64,8 @@ re.sub(r"treats .+","long walks and playing fetch", r.string4)
 
 **Writing Functions in Python:**
 ```{python}
-string5="I LovE My dOg tHeO. He iS a GoOD boY moST OF ThE TIMe! Except for when HE STeaLs My SOCkS."
-nopun=re.sub(r"\.|—|\,|;","", string5)
+string5="I LovE My dOg tHeO! He iS a GoOD boY, moST OF ThE TIMe! Except for when HE STeaLs My SOCkS."
+nopun=re.sub(r"\.|\,|!","", string5)
 wordlist=re.split(r"\s",nopun)
 
 hold=[]
