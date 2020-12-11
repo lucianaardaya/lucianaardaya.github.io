@@ -28,24 +28,5 @@ Lists &amp;amp; Indexing in Python:
 list1=[&amp;#39;I&amp;#39;,&amp;#39;love&amp;#39;,&amp;#39;my&amp;#39;, &amp;#39;dog&amp;#39;, &amp;#39;Theo&amp;#39;, &amp;#39;me&amp;#39;, &amp;#39;loves&amp;#39;] list1[0:5] ## [&amp;#39;I&amp;#39;, &amp;#39;love&amp;#39;, &amp;#39;my&amp;#39;, &amp;#39;dog&amp;#39;, &amp;#39;Theo&amp;#39;] list1.append(&amp;#39;and&amp;#39;) list1[-1] ## &amp;#39;and&amp;#39; list1[2:5] ## [&amp;#39;my&amp;#39;, &amp;#39;dog&amp;#39;, &amp;#39;Theo&amp;#39;] list1[6] ## &amp;#39;loves&amp;#39; list1[5] ## &amp;#39;me&amp;#39;   Using Strings in Python and R:</description>
     </item>
     
-    <item>
-      <title>another post</title>
-      <link>/post/2020/12/01/another-post/</link>
-      <pubDate>Tue, 01 Dec 2020 00:00:00 +0000</pubDate>
-      
-      <guid>/post/2020/12/01/another-post/</guid>
-      <description>testing this post</description>
-    </item>
-    
-    <item>
-      <title>Creating a New Theme</title>
-      <link>/post/2014/09/28/creating-a-new-theme/</link>
-      <pubDate>Sun, 28 Sep 2014 00:00:00 +0000</pubDate>
-      
-      <guid>/post/2014/09/28/creating-a-new-theme/</guid>
-      <description>Introduction This tutorial will show you how to create a simple theme in Hugo. I assume that you are familiar with HTML, the bash command line, and that you are comfortable using Markdown to format content. I&amp;rsquo;ll explain how Hugo uses templates and how you can organize your templates to create a theme. I won&amp;rsquo;t cover using CSS to style your theme.
-We&amp;rsquo;ll start with creating a new site with a very basic template.</description>
-    </item>
-    
   </channel>
 </rss>
